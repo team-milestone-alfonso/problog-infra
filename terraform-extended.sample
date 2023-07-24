@@ -1,0 +1,57 @@
+#!/bin/bash
+
+INTERNAL_DOMAIN='{{ INTERNAL_DOMAIN }}'
+
+CREDENTIALS=()
+CREDENTIALS+=('BUCKET_ACCESS_KEY' '{{ BUCKET_ACCESS_KEY }}')
+CREDENTIALS+=('BUCKET_SECRET_KEY' '{{ BUCKET_SECRET_KEY }}')
+CREDENTIALS+=('PRIMARY_CANONICAL_DOMAIN' '{{ PRIMARY_CANONICAL_DOMAIN }}')
+CREDENTIALS+=('SECONDARY_CANONICAL_DOMAIN' '{{ SECONDARY_CANONICAL_DOMAIN }}')
+CREDENTIALS+=('MYSQL_ROOT_DOMAIN' '{{ MYSQL_ROOT_DOMAIN }}')
+CREDENTIALS+=('INTERNAL_DOMAIN' $INTERNAL_DOMAIN)
+CREDENTIALS+=('BUCKET_KEY_NAME' "${INTERNAL_DOMAIN}\/terraform.tfstate")
+CREDENTIALS+=('DIGITAL_OCEAN_TOKEN' '{{ DIGITAL_OCEAN_TOKEN }}')
+
+ROWS=8
+COLS=2
+
+before_execute() {
+	for i in $(seq $ROWS)
+	do 
+		key=${CREDENTIALS[$((($i * $COLS) - 2))]};
+		value=${CREDENTIALS[$((($i * $COLS) - 1))]};
+
+		# Apple specific code 
+		sed -i '' s/"$key"/"$value"/g terraform.tfvars
+		sed -i '' s/"$key"/"$value"/g provider.tf
+
+		# TODO: Linux specific code
+	done
+}
+
+after_execute() {
+	for i in $(seq $ROWS)
+	do 
+		key=${CREDENTIALS[$((($i * $COLS) - 2))]};
+		value=${CREDENTIALS[$((($i * $COLS) - 1))]};
+
+		# Apple specific code 
+		sed -i '' s/"$value"/"$key"/g terraform.tfvars
+		sed -i '' s/"$value"/"$key"/g provider.tf
+
+		# TODO: Linux specific code
+	done
+}
+
+BASE_COMMAND="terraform $@"
+TERRAFORM_COMMAND=""
+
+if [[ "$BASE_COMMAND" == *"state"* ]]; then 
+	TERRAFORM_COMMAND="$BASE_COMMAND"
+else 
+	TERRAFORM_COMMAND="$BASE_COMMAND -var-file=terraform.tfvars"
+fi
+
+before_execute
+eval $TERRAFORM_COMMAND
+after_execute

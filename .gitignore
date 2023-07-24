@@ -1,0 +1,15 @@
+/.terraform/*
+terraform.tfstate
+terraform.tfstate.backup
+terraform-extended
+id_rsa
+id_rsa.pub
+ec2-ssh
+ec2-ssh.pub
+rails-github
+rails-github.pub
+credentials.yaml
+.terraform.tfstate.lock.info
+inventory
+project_configs/database.yml
+project_configs/production.key

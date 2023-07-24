@@ -1,0 +1,6 @@
+---
+roles:
+- gantsign.oh-my-zsh
+- gantsign.golang
+- zzet.rbenv
+- 0x0I.systemd

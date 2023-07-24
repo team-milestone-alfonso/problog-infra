@@ -1,0 +1,18 @@
+#cloud-config
+# Add groups to the system
+# The following example adds the 'admingroup' group with members 'root' and 'sys'
+# and the empty group cloud-users.
+groups:
+  - admingroup: [root,sys]
+  - cloud-users
+users:
+  - default
+  - name: ubuntu
+    gecos: terraform digitalocean wordpress
+    primary_group: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell : /bin/bash
+    ssh_import_id:
+    lock_passwd: false
+    ssh_authorized_keys: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCt+AwIlg0FGBz/66BZNM3stKTuyQq2cR6gTUH90fwgXLP0rMzxblfcMdkLE3TIzDL8QDkHkMlFT1V7rwOGNuHe24PLw+lVYkdvg+amQymTijPpxxiFaK7zs+4Hwe8cVnaFgWCf6nDWwFh0amdgadupgmr9nR4HjD2cVWZTeb8sIqOgtlXwytjM/q3WZtfywzZyNYULIX3NIo1/Zb1UTHAB4f4p6D4PhLGCQgnqRaD3eb0zydzPf4veJ3mPYAVxIIQaUul8bDQNyVaLtrryTsqRjgMTP7N3Pp/cWSkkbsWURqcNL9di6bBhUg/MH74N+Dt4Q8YNav4B76FTN4EumE6cHo7kxXdoTDcB1+josJFS171Zzl+m8umq8vp+obJy0ahct3tD+Xk0iD8eF0yOxOGqbbpHRfLO0k1JvnKe/B14oJw9lJmZzTY6+KDx812Nmy5xzCDEoYmH+jtOVLFfRW2Wy+lfw/c79WOi8TrqpCwjchB08p198kQQyE1+H8iFyaE= kodingwarrior@ijaeyeol-ui-MacBookPro.local

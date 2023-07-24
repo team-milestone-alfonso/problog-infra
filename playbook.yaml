@@ -1,0 +1,143 @@
+---
+- hosts: infra-manager-main
+  gather_facts: true 
+
+  vars:
+    rbenv:
+      env: user
+      version: v1.2.0
+      default_ruby: 3.1.2
+      rubies:
+      - version: 3.1.2
+
+  roles:
+    - role: gantsign.oh-my-zsh
+      users:
+        - username: ubuntu
+    - role: gantsign.golang
+      golang_gopath: '$HOME/go'
+
+  tasks:
+    - include_vars: "credentials.yaml"
+      tags: [ bootstrap, postgresql, caddy, rails ]
+
+    - name: ping
+      ping:
+      tags: [ bootstrap ]
+
+    - name: Upgrade all apt packages
+      apt: upgrade=dist force_apt_get=yes
+      become: true
+      tags: [ bootstrap ]
+
+    - name: Check if a reboot is needed for Ubuntu server
+      register: reboot_required_file
+      stat: path=/var/run/reboot-required get_md5=no
+      tags: [ bootstrap ]
+
+    - name: Reboot the Ubuntu server
+      reboot:
+        msg: "Reboot initiated by Ansible due to kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists
+      become: true
+      tags: [ bootstrap ]
+
+    - name: node setup
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+      tags: [ bootstrap, node ]
+
+    - name: Setup key-ring for yarn
+      shell: |
+        curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+      tags: [ bootstrap, node ]
+
+    - name: Register yarn repository to sources.list.d
+      shell: |
+        echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+      tags: [ bootstrap, node ]
+
+    - name: install packages
+      apt:
+        pkg:
+          - zlib1g-dev
+          - build-essential
+          - libssl-dev
+          - libreadline-dev
+          - libyaml-dev
+          - libsqlite3-dev
+          - sqlite3
+          - libxml2-dev
+          - libxslt1-dev
+          - libcurl4-openssl-dev
+          - software-properties-common
+          - libffi-dev
+          - nodejs
+          - yarn
+          - checkinstall
+          - zlib1g-dev
+          - postgresql
+          - postgresql-contrib
+          - libpq-dev
+          - python3-pip
+          - python3-psycopg2
+          - python-is-python3
+          - python2
+        update_cache: yes
+        state: latest
+        lock_timeout: 300
+      become: true
+      tags: [ bootstrap, dependencies ]
+
+    - name: Setup rbenv
+      include_role: 
+        name: zzet.rbenv
+        apply:
+          tags: [ bootstrap ]
+      vars:
+        rbenv_users:
+          - ubuntu
+      tags: [ bootstrap, rails ]
+
+    - name: Setup postgresql 
+      include_tasks: 
+        file: postgres.yaml
+        apply:
+          vars:
+            db_password: "{{ postgres_root_password }}"
+          tags: [ bootstrap, postgresql ]
+      tags: [ bootstrap, postgresql ]
+
+    - name: add rbenv initialization to zsh profile
+      blockinfile:
+        block: "{{lookup('file', 'rbenv.sh')}}"
+        dest: ~/.zshrc
+      tags: [ bootstrap, rails ]
+
+    - name: Check if capistrano is already setup
+      stat:
+        path: "/home/ubuntu/problog-infra-manager"
+      register: deployed_app_path
+      tags: [ bootstrap, rails, install-only ]
+
+    # - name: Deploy rails app using capistrano
+    #   # capistrano
+    #   tags: [ bootstrap rails ]
+
+    - name: Setup rails
+      include_tasks: rails.yaml
+      tags: [ bootstrap, rails, install-only ]
+      when: deployed_app_path.stat.exists and deployed_app_path.stat.isdir
+
+    - name: Setup caddy web server
+      include_tasks: 
+        file: caddy.yaml
+        apply:
+          tags: [ bootstrap, caddy ]
+      tags: [ bootstrap, caddy ]
+
