@@ -1,5 +1,5 @@
 {{ internal_domain }} {
-	root * /home/ubuntu/problog-infra-manager/current/public
+	root * /home/ubuntu/problog-backend/current/public
 
 	encode zstd gzip
 
@@ -8,5 +8,5 @@
 	@notStatic { 
 		not file
 	}
-	reverse_proxy @notStatic unix//home/ubuntu/problog-infra-manager/shared/tmp/sockets/puma.sock
+	reverse_proxy @notStatic unix//home/ubuntu/problog-backend/shared/tmp/sockets/puma.sock
 }

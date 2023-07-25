@@ -14,20 +14,23 @@
   when: not caddy_config_file.stat.exists
 
 - name: Set permissions for directories
-  shell: "/usr/bin/find /home/ubuntu/problog-infra-manager -type d -exec chmod 750 {} \\;"
+  shell: "/usr/bin/find /home/ubuntu/problog-backend -type d -exec chmod 750 {} \\;"
 
 - name: Set permissions for files
-  shell: "/usr/bin/find /home/ubuntu/problog-infra-manager -type f -exec chmod 640 {} \\;"
+  # for executable files
+  shell: "/usr/bin/find /home/ubuntu/problog-backend -type f -exec chmod 740 {} \\;"
 
 - name: Set group permissions for caddy user 
   become: true
   shell: |
-    sudo usermod -a -G caddy ubuntu
+    sudo usermod -a -G ubuntu caddy
 
 - name: Copy templated Caddyfile to /etc/caddy/Caddyfile
   template:
     src: project_configs/Caddyfile.j2
     dest: /etc/caddy/Caddyfile
+  become: yes
+  become_user: root
 
 - name: Restart caddy
   ansible.builtin.systemd:
