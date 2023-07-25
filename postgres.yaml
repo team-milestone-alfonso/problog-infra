@@ -13,7 +13,7 @@
 
 - name: "Create database"
   postgresql_db:
-    name: problog_infra_manager_production
+    name: problog_backend_production
     login_user: postgres
   become: yes
   become_user: postgres
@@ -39,12 +39,22 @@
 
 - name: "Craete database user"
   postgresql_user:
-    name: problog_infra_manager
-    db: problog_infra_manager_production
+    name: ubuntu
+    db: problog_backend_production
     role_attr_flags: CREATEDB,SUPERUSER
     password: "{{ db_password }}"
-    priv: ALL
     login_user: postgres
+  become: yes
+  become_user: postgres
+  vars:
+    ansible_ssh_pipelining: true
+
+- name: "GRANT database privilege to user"
+  postgresql_privs:
+    db: problog_backend_production
+    role: ubuntu
+    type: database
+    privs: ALL
   become: yes
   become_user: postgres
   vars:
@@ -52,10 +62,10 @@
 
 - name: "Check database"
   postgresql_db:
-    name: problog_infra_manager_production
-    login_user: postgres
+    name: problog_backend_production
+    login_user: ubuntu
   become: yes
-  become_user: postgres
+  become_user: ubuntu
   vars:
     ansible_ssh_pipelining: true
 
