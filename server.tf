@@ -1,5 +1,23 @@
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "local_file" "private_key" {
+  content         = tls_private_key.ssh.private_key_pem
+  filename        = "problog.pem"
+  file_permission = "0600"
+}
+
+resource "local_file" "public_key" {
+  content   	  = chomp(tls_private_key.ssh.public_key_openssh)
+  filename 		  = "problog.pub"
+  file_permission = "0600"
+}
 
 resource "digitalocean_droplet" "infra_manager" {
+  depends_on = [local_file.private_key, local_file.public_key]
+
   image  = "ubuntu-22-10-x64"
   name   = "infra-manager"
   region = "sgp1" // 싱가포르 리전으로 변경
@@ -20,10 +38,21 @@ resource "digitalocean_droplet" "infra_manager" {
     destination = "/tmp/sshd_config"
   }
 
+  provisioner "file" {
+  	source      = "problog.pem"
+	destination = "/home/ubuntu/.ssh/id_rsa"
+  }
+
+  provisioner "file" {
+  	source 		= "problog.pub"
+	destination = "/home/ubuntu/.ssh/id_rsa.pub"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "sudo chown root:root /tmp/sshd_config",
       "sudo cp /tmp/sshd_config /etc/ssh/sshd_config",
+	  "sudo chmod 600 /home/ubuntu/.ssh/*"
     ]
   }
 }
