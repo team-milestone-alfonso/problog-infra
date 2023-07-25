@@ -1,15 +1,13 @@
 
-- name: "copy rails database.yml file to share folder"
-  copy:
-    src: "project_configs/database.yml"
-    dest: "/home/ubuntu/problog-infra-manager/shared/config/"
+- name: Clone rails project from remote 
+  local_action:
+    module: shell
+    cmd: rm -rf problog-backend && git clone git@github.com:TeamMilestone/problog-backend
+    chdir: /tmp
 
-- name: "copy rails credential key file to share folder"
-  copy:
-    src: "project_configs/production.key"
-    dest: "/home/ubuntu/problog-infra-manager/shared/config/credentials/"
+- name: "Deploy rails project using capistrano"
+  local_action:
+    module: shell
+    cmd: bundle exec cap production deploy
+    chdir: /tmp/problog-backend
 
-- name: "copy rails development key file to share folder"
-  copy:
-    src: "project_configs/development.key"
-    dest: "/home/ubuntu/problog-infra-manager/shared/config/credentials/"
