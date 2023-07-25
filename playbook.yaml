@@ -21,6 +21,9 @@
     - include_vars: "credentials.yaml"
       tags: [ bootstrap, postgresql, caddy, rails ]
 
+    - include_vars: "credentials_for_github.yaml"
+      tags: [ bootstrap, postgresql, caddy, rails ]
+
     - name: ping
       ping:
       tags: [ bootstrap ]
