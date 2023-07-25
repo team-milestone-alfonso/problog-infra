@@ -91,6 +91,8 @@
         update_cache: yes
         state: latest
         lock_timeout: 300
+      retries: 5
+      delay: 10
       become: true
       tags: [ bootstrap, dependencies ]
 
