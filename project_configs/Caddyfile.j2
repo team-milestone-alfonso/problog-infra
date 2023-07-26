@@ -1,5 +1,18 @@
+# Global Options
+{
+
+}
+
+# Site specific options
 {{ internal_domain }} {
 	root * /home/ubuntu/problog-backend/current/public
+
+	log {
+		format transform `{request>headers>X-Forwarded-For>[0]:request>remote_ip} - {request>user_id} [{ts}] "{request>method} {request>uri} {request>proto}" {status} {size} "{request>headers>Referer>[0]}" "{request>headers>User-Agent>[0]}"` {
+			time_format rfc3339
+		}
+		output file /home/ubuntu/problog-backend/shared/log/caddy.log
+	}
 
 	encode zstd gzip
 
@@ -8,5 +21,5 @@
 	@notStatic { 
 		not file
 	}
-	reverse_proxy @notStatic unix//home/ubuntu/problog-backend/shared/tmp/sockets/puma.sock
+	reverse_proxy @notStatic unix//home/ubuntu/problog-backend/shared/tmp/sockets/puma.sock 
 }

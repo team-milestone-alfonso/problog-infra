@@ -25,6 +25,20 @@
   shell: |
     sudo usermod -a -G ubuntu caddy
 
+- name: 
+  ansible.builtin.file:
+    path: /home/ubuntu/problog-backend/shared/log/caddy.log
+    owner: ubuntu
+    group: ubuntu
+    state: touch
+    mode: u=rwx,g=rw,o=r
+
+- name: Install caddy package (caddy-transform)
+  shell: sudo caddy add-package github.com/caddyserver/transform-encoder
+  become: yes
+  become_user: root
+  ignore_errors: yes
+
 - name: Copy templated Caddyfile to /etc/caddy/Caddyfile
   template:
     src: project_configs/Caddyfile.j2
