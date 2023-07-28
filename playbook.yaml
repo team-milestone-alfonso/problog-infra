@@ -19,10 +19,10 @@
 
   tasks:
     - include_vars: "credentials.yaml"
-      tags: [ bootstrap, postgresql, caddy, rails ]
+      tags: [ bootstrap, postgresql, caddy, rails, anycable ]
 
     - include_vars: "credentials_for_github.yaml"
-      tags: [ bootstrap, postgresql, caddy, rails ]
+      tags: [ bootstrap, postgresql, caddy, rails, anycable ]
 
     - name: ping
       ping:
@@ -193,10 +193,17 @@
             tags: [ booystrap, rails, install-only ]
       tags: [ bootstrap, rails, install-only ]
 
+    - name: Setup Anycable
+      include_tasks:
+        file: anycable.yaml
+        apply:
+          tags: [ rails, anycable ]
+      tags: [ rails, anycable ]
+
     - name: Setup caddy web server
       include_tasks: 
         file: caddy.yaml
         apply:
-          tags: [ bootstrap, caddy ]
-      tags: [ bootstrap, caddy ]
+          tags: [ bootstrap, caddy, anycable ]
+      tags: [ bootstrap, caddy, anycable ]
 

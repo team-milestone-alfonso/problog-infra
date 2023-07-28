@@ -1,0 +1,36 @@
+- name: install redis package
+  apt:
+    pkg: 
+      - redis
+    update_cache: yes
+    state: latest
+  become: true
+
+- name: install anycable go package
+  shell: |
+    # 2023-07-28 기준으로는 latest 버전이 v1.4.1 이지만, go install 명령어 실행했을때 오류가 발생함
+    /opt/go/{{ golang_version }}/bin/go install github.com/anycable/anycable-go/cmd/anycable-go@v1.3.1
+  become: true
+
+- name: Setup anycable-go systemd service
+  include_role:
+    name: 0x0I.systemd
+  vars:
+    unit_config:
+    - name: "anycable-go"
+      enabled: yes
+      state: started
+      Unit:
+        After: network-online.target
+        Description: AnyCable Go WebSocket Server
+      Service:
+        Type: simple
+        LimitNOFILE: 16384
+        ExecStart: '/home/ubuntu/go/bin/anycable-go --headers=cookie,authorization'
+        ExecReload: '/bin/kill -TERM $MAINPID'
+        Restart: 'on-failure'
+        Environment: ANYCABLE_HOST={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }} ANYCABLE_PORT=3334 ANYCABLE_REDIS_URL=redis://localhost:6379/1
+      Install:
+        WantedBy: 'multi-user.target'
+
+
