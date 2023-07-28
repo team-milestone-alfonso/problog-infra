@@ -18,6 +18,26 @@
 
 	file_server
 
+	# Equivalent to below:
+	#
+	#
+	# location /cable {
+	#     proxy_pass http://localhost:3334;
+	#     proxy_http_version 1.1;
+	#     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	#     proxy_set_header Host $http_host;
+	#     proxy_set_header Upgrade $http_upgrade;
+	#     proxy_set_header Connection "Upgrade";
+	# }
+	#
+	
+	@ws {
+			header Connection *Upgrade*
+			header Upgrade websocket
+			path   /cable
+	}
+	reverse_proxy @ws {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:3334
+
 	@notStatic { 
 		not file
 	}
