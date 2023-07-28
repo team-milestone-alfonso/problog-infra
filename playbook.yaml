@@ -93,9 +93,38 @@
           - python2
         update_cache: yes
         state: latest
-        lock_timeout: 300
-      retries: 5
-      delay: 10
+      become: true
+      tags: [ bootstrap, dependencies ]
+      ignore_errors: yes
+
+    - name: install packages again
+      apt:
+        pkg:
+          - zlib1g-dev
+          - build-essential
+          - libssl-dev
+          - libreadline-dev
+          - libyaml-dev
+          - libsqlite3-dev
+          - sqlite3
+          - libxml2-dev
+          - libxslt1-dev
+          - libcurl4-openssl-dev
+          - software-properties-common
+          - libffi-dev
+          - nodejs
+          - yarn
+          - checkinstall
+          - zlib1g-dev
+          - postgresql
+          - postgresql-contrib
+          - libpq-dev
+          - python3-pip
+          - python3-psycopg2
+          - python-is-python3
+          - python2
+        update_cache: yes
+        state: latest
       become: true
       tags: [ bootstrap, dependencies ]
 
