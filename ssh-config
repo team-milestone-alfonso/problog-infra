@@ -1,0 +1,4 @@
+Host github.com-milestone
+	HostName github.com
+	User nico@team-milestone.io
+	IdentityFile ~/.ssh/toss_payments
