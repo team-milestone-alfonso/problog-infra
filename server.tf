@@ -1,22 +1,44 @@
-resource "tls_private_key" "ssh" {
+resource "tls_private_key" "problog_ssh" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-resource "local_file" "private_key" {
-  content         = tls_private_key.ssh.private_key_pem
+resource "tls_private_key" "toss_payments_ssh" {
+  algorithm = "ECDSA"
+  ecdsa_curve = "P384"
+}
+
+resource "local_file" "problog_private_key" {
+  content         = tls_private_key.problog_ssh.private_key_pem
   filename        = "problog.pem"
   file_permission = "0600"
 }
 
-resource "local_file" "public_key" {
-  content   	  = chomp(tls_private_key.ssh.public_key_openssh)
+resource "local_file" "problog_public_key" {
+  content   	  = chomp(tls_private_key.problog_ssh.public_key_openssh)
   filename 		  = "problog.pub"
   file_permission = "0600"
 }
 
+resource "local_file" "toss_payments_private_key" {
+  content         = tls_private_key.toss_payments_ssh.private_key_pem
+  filename        = "toss_payments.pem"
+  file_permission = "0600"
+}
+
+resource "local_file" "toss_payments_public_key" {
+  content   	  = chomp(tls_private_key.toss_payments_ssh.public_key_openssh)
+  filename 		  = "toss_payments.pub"
+  file_permission = "0600"
+}
+
 resource "digitalocean_droplet" "infra_manager" {
-  depends_on = [local_file.private_key, local_file.public_key]
+  depends_on = [
+  	local_file.problog_private_key, 
+	local_file.problog_public_key,
+  	local_file.toss_payments_private_key, 
+	local_file.toss_payments_public_key
+  ]
 
   image  = "ubuntu-22-10-x64"
   name   = "infra-manager"
@@ -46,6 +68,16 @@ resource "digitalocean_droplet" "infra_manager" {
   provisioner "file" {
   	source 		= "problog.pub"
 	destination = "/home/ubuntu/.ssh/id_rsa.pub"
+  }
+
+  provisioner "file" {
+  	source      = "toss_payments.pem"
+	destination = "/home/ubuntu/.ssh/toss_payments"
+  }
+
+  provisioner "file" {
+  	source 		= "toss_payments.pub"
+	destination = "/home/ubuntu/.ssh/toss_payments.pub"
   }
 
   provisioner "remote-exec" {
