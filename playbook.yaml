@@ -19,14 +19,50 @@
 
   tasks:
     - include_vars: "credentials.yaml"
-      tags: [ bootstrap, postgresql, caddy, rails, anycable ]
+      tags: [ always, bootstrap, postgresql, caddy, rails, anycable ]
 
     - include_vars: "credentials_for_github.yaml"
-      tags: [ bootstrap, postgresql, caddy, rails, anycable ]
+      tags: [ always, bootstrap, postgresql, caddy, rails, anycable ]
+
+    - name: Add SSH Configuration file 
+      copy:
+        src: "ssh-config"
+        dest: "/home/ubuntu/.ssh/config"
+        mode: 0440
+
+    - name: Check if capistrano is already setup
+      stat:
+        path: "/home/ubuntu/problog-backend"
+      register: deployed_app_path
+
+    - name: Register github deploy key
+      uri:
+        url: https://api.github.com/repos/{{ github_deploy_key_owner }}/{{ github_deploy_key_repository }}/keys
+        method: POST
+        body: "{'key': '{{ lookup('file', 'problog.pub') }}', 'title': '{{ github_deploy_key_repository }}-key', 'read_only': true }"
+        body_format: json
+        status_code: [201, 422]
+        headers:
+          Accept: application/vnd.github+json
+          Authorization: Bearer {{ github_deploy_key_token }}
+      tags: [ bootstrap ]
+
+    - name: Register github deploy key for toss-payments-ruby
+      uri:
+        url: https://api.github.com/repos/{{ github_deploy_key_owner }}/toss-payments-ruby/keys
+        method: POST
+        body: "{'key': '{{ lookup('file', 'toss_payments.pub') }}', 'title': 'toss-payments-ruby-key', 'read_only': true }"
+        body_format: json
+        status_code: [201, 422]
+        headers:
+          Accept: application/vnd.github+json
+          Authorization: Bearer {{ github_deploy_key_token }}
+      tags: [ bootstrap, always ]
+
 
     - name: ping
       ping:
-      tags: [ bootstrap ]
+      tags: [ always, bootstrap ]
 
     - name: Upgrade all apt packages
       apt: upgrade=dist force_apt_get=yes
@@ -187,33 +223,6 @@
 
     - name: Deploy rails app
       block:
-      - name: Check if capistrano is already setup
-        stat:
-          path: "/home/ubuntu/problog-backend"
-        register: deployed_app_path
-      
-      - name: github deploy key
-        github_deploy_key:
-          owner: "{{ github_deploy_key_owner }}"
-          repository: "{{ github_deploy_key_repository }}"
-          name: "{{ github_deploy_key_repository }}"
-          token: "{{ github_deploy_key_token }}"
-          key: "{{ lookup('file', 'problog.pub') }}"
-          force: yes 
-        when: not deployed_app_path.stat.exists
-
-      - name: "copy rails database.yml file to share folder"
-        template:
-          src: "project_configs/database.yml.j2"
-          dest: "/home/ubuntu/problog-backend/shared/config/database.yml"
-        when: deployed_app_path.stat.exists
-
-      - name: "copy rails credential key file to share folder"
-        copy:
-          src: "project_configs/production.key"
-          dest: "/home/ubuntu/problog-backend/shared/config/credentials/"
-        when: deployed_app_path.stat.exists
-
       - name: Setup rails
         include_tasks: 
           file: rails.yaml
@@ -225,16 +234,6 @@
           path: "/home/ubuntu/problog-backend"
         register: deployed_app_path
       
-      - name: github deploy key
-        github_deploy_key:
-          owner: "{{ github_deploy_key_owner }}"
-          repository: "{{ github_deploy_key_repository }}"
-          name: "{{ github_deploy_key_repository }}"
-          token: "{{ github_deploy_key_token }}"
-          key: "{{ lookup('file', 'problog.pub') }}"
-          force: yes 
-        when: not deployed_app_path.stat.exists
-
       - name: "copy rails database.yml file to share folder"
         template:
           src: "project_configs/database.yml.j2"
@@ -259,13 +258,5 @@
           file: rails.yaml
           apply:
             tags: [ booystrap, rails, install-only ]
-      tags: [ bootstrap, rails, install-only ]
-
-    - name: Setup caddy web server
-      include_tasks: 
-        file: caddy.yaml
-        apply:
-          tags: [ bootstrap, caddy, anycable ]
-      tags: [ bootstrap, caddy, anycable ]
-
+      tags: [ bootstrap, rails, install-only, caddy, anycable ]
 
