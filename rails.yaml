@@ -11,3 +11,18 @@
     cmd: bundle exec cap production deploy
     chdir: /tmp/problog-backend
 
+- name: Set permissions for directories
+  shell: "/usr/bin/find /home/ubuntu/problog-backend -type d -exec chmod 750 {} \\;"
+
+- name: Set permissions for files
+  # for executable files
+  shell: "/usr/bin/find /home/ubuntu/problog-backend -type f -exec chmod 740 {} \\;"
+
+- name: 
+  ansible.builtin.file:
+    path: /home/ubuntu/problog-backend/shared/log/caddy.log
+    owner: ubuntu
+    group: ubuntu
+    state: touch
+    mode: u=rwx,g=rw,o=r
+
