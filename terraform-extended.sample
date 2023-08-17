@@ -21,11 +21,15 @@ before_execute() {
 		key=${CREDENTIALS[$((($i * $COLS) - 2))]};
 		value=${CREDENTIALS[$((($i * $COLS) - 1))]};
 
-		# Apple specific code 
-		sed -i '' s/"$key"/"$value"/g terraform.tfvars
-		sed -i '' s/"$key"/"$value"/g provider.tf
-
-		# TODO: Linux specific code
+		if [ "$(uname)" = "Darwin" ]; then
+			# Apple specific code 
+			sed -i '' s/"$key"/"$value"/g terraform.tfvars
+			sed -i '' s/"$key"/"$value"/g provider.tf
+		elif [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
+			# Linux specific code
+			sed -i s/"$key"/"$value"/g terraform.tfvars
+			sed -i s/"$key"/"$value"/g terraform.tfvars
+		fi
 	done
 }
 
@@ -35,11 +39,15 @@ after_execute() {
 		key=${CREDENTIALS[$((($i * $COLS) - 2))]};
 		value=${CREDENTIALS[$((($i * $COLS) - 1))]};
 
-		# Apple specific code 
-		sed -i '' s/"$value"/"$key"/g terraform.tfvars
-		sed -i '' s/"$value"/"$key"/g provider.tf
-
-		# TODO: Linux specific code
+		if [ "$(uname)" = "Darwin" ]; then
+			# Apple specific code 
+			sed -i '' s/"$value"/"$key"/g terraform.tfvars
+			sed -i '' s/"$value"/"$key"/g provider.tf
+		elif [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
+			# Linux specific code
+			sed -i s/"$value"/"$key"/g terraform.tfvars
+			sed -i s/"$value"/"$key"/g terraform.tfvars
+		fi
 	done
 }
 
