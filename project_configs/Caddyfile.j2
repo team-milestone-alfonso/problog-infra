@@ -30,7 +30,7 @@
 	#     proxy_set_header Connection "Upgrade";
 	# }
 	#
-	
+
 	@ws {
 			header Connection *Upgrade*
 			header Upgrade websocket
@@ -38,8 +38,11 @@
 	}
 	reverse_proxy @ws {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:3334
 
-	@notStatic { 
+	@notStatic {
 		not file
 	}
-	reverse_proxy @notStatic unix//home/ubuntu/problog-backend/shared/tmp/sockets/puma.sock 
+	reverse_proxy @notStatic unix//home/ubuntu/problog-backend/shared/tmp/sockets/puma.sock
+}
+app.problog88.com {
+	redir https://{{ internal_domain }}{uri}
 }
