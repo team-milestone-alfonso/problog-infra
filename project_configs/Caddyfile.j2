@@ -4,7 +4,7 @@
 }
 
 # Site specific options
-{{ internal_domain }} {
+app.problog88.com {
 	root * /home/ubuntu/problog-backend/current/public
 
 	log {
@@ -43,6 +43,6 @@
 	}
 	reverse_proxy @notStatic unix//home/ubuntu/problog-backend/shared/tmp/sockets/puma.sock
 }
-app.problog88.com {
-	redir https://{{ internal_domain }}{uri}
+{{ internal_domain }} {
+	redir https://app.problog88.com{uri}
 }
