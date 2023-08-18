@@ -59,6 +59,17 @@
           Authorization: Bearer {{ github_deploy_key_token }}
       tags: [ bootstrap, always ]
 
+    - name: Register github deploy key for wordpress related script
+      uri:
+        url: https://api.github.com/repos/{{ github_deploy_key_owner }}/infra-wordpress-docean/keys
+        method: POST
+        body: "{'key': '{{ lookup('file', 'wordpress.pub') }}', 'title': 'wordpress-infra-key', 'read_only': true }"
+        body_format: json
+        status_code: [201, 422]
+        headers:
+          Accept: application/vnd.github+json
+          Authorization: Bearer {{ github_deploy_key_token }}
+      tags: [ bootstrap ]
 
     - name: ping
       ping:

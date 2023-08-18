@@ -8,6 +8,11 @@ resource "tls_private_key" "toss_payments_ssh" {
   ecdsa_curve = "P384"
 }
 
+resource "tls_private_key" "wordpress_infra_ssh" {
+  algorithm = "ECDSA"
+  ecdsa_curve = "P521"
+}
+
 resource "local_file" "problog_private_key" {
   content         = tls_private_key.problog_ssh.private_key_pem
   filename        = "problog.pem"
@@ -32,12 +37,26 @@ resource "local_file" "toss_payments_public_key" {
   file_permission = "0600"
 }
 
+resource "local_file" "wordpress_infra_private_key" {
+  content         = tls_private_key.wordpress_infra_ssh.private_key_pem
+  filename        = "wordpress.pem"
+  file_permission = "0600"
+}
+
+resource "local_file" "wordpress_infra_public_key" {
+  content   	  = chomp(tls_private_key.wordpress_infra_ssh.public_key_openssh)
+  filename 		  = "wordpress.pub"
+  file_permission = "0600"
+}
+
 resource "digitalocean_droplet" "infra_manager" {
   depends_on = [
   	local_file.problog_private_key, 
 	local_file.problog_public_key,
   	local_file.toss_payments_private_key, 
-	local_file.toss_payments_public_key
+	local_file.toss_payments_public_key,
+	local_file.wordpress_infra_private_key,
+	local_file.wordpress_infra_public_key,
   ]
 
   image  = "ubuntu-22-10-x64"
@@ -79,6 +98,18 @@ resource "digitalocean_droplet" "infra_manager" {
   	source 		= "toss_payments.pub"
 	destination = "/home/ubuntu/.ssh/toss_payments.pub"
   }
+
+  provisioner "file" {
+	source      = "wordpress.pem"
+	destination = "/home/ubuntu/.ssh/wordpress"
+  }
+
+  provisioner "file" {
+	source 		= "wordpress.pub"
+	destination = "/home/ubuntu/.ssh/wordpress.pub"
+  }
+	
+
 
   provisioner "remote-exec" {
     inline = [
